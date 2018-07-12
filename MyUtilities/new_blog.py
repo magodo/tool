@@ -23,6 +23,8 @@ tags: {2}
 published: true
 comments: true
 script: [post.js]
+excerpted: |
+    A short description...
 ---
 
 * TOC
