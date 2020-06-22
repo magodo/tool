@@ -62,41 +62,45 @@ main() {
     fi
 
     repos=(
-        hashicorp/go-azure-helpers
-        hashicorp/terraform-plugin-sdk
-        bflad/tfproviderlint
+#         hashicorp/go-azure-helpers
+#         hashicorp/terraform-plugin-sdk
+#         bflad/tfproviderlint
         terraform-providers/terraform-provider-azurerm
-        katbyte/terrafmt
-        hashicorp/terraform
+#         katbyte/terrafmt
+#         hashicorp/terraform
     )
 
+cat << EOF
+Terraform community contributions from @$id
+===
+EOF
+
     cat << EOF
-===================
-    ISSUE
-===================
+
+ISSUE
+===
 EOF
     for repo in "${repos[@]}"; do
         cat << EOF
-------------------
+
 @$repo
-------------------
+---
 EOF
-        curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:issue+repo:$repo+commenter:$id" | jq -r '.items | .[] | .title'
+curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:issue+repo:$repo+commenter:$id" | jq -r '.items | .[] | "- [\(.title)](\(.html_url))"'
     done
 
     cat << EOF
 
-===================
-    PULL
-===================
+PULL
+===
 EOF
     for repo in "${repos[@]}"; do
         cat << EOF
-------------------
+
 @$repo
-------------------
+---
 EOF
-        curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:pr+repo:$repo+commenter:$id" | jq -r '.items | .[] | .title'
+        curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:pr+repo:$repo+commenter:$id" | jq -r '.items | .[] |  "- [\(.title)](\(.html_url))"'
         #curl -s "https://api.github.com/repos/$repo/pulls?q=author:$id" | jq -r '.[] | .title'
     done
 }
