@@ -63,10 +63,10 @@ main() {
     fi
 
     repos=(
+        terraform-providers/terraform-provider-azurerm
         hashicorp/go-azure-helpers
         hashicorp/terraform-plugin-sdk
         bflad/tfproviderlint
-        terraform-providers/terraform-provider-azurerm
         katbyte/terrafmt
         hashicorp/terraform
     )
@@ -89,10 +89,11 @@ EOF
 @$repo
 ---
 EOF
-        total_count=$(curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:issue+repo:$repo+commenter:$id" | jq -r '.total_count')
+        url="https://api.github.com/search/issues?q=type:issue+repo:$repo+commenter:$id"
+        total_count=$(curl "${option[@]}" -s "$url" | jq -r '.total_count')
 
         for i in $(seq $(( (total_count+per_page-1)/per_page ))); do
-            curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:issue+repo:$repo+commenter:$id&page=$i&per_page=$per_page" | jq -r '.items | .[] | "1. [\(.title)](\(.html_url))"'
+            curl "${option[@]}" -s "$url&page=$i&per_page=$per_page" | jq -r '.items | .[] | "1. [\(.title)](\(.html_url))"'
         done
     done
 
@@ -108,9 +109,28 @@ EOF
 ---
 EOF
 
-        total_count=$(curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:pr+repo:$repo+author:$id" | jq -r '.total_count')
+        url="https://api.github.com/search/issues?q=type:pr+repo:$repo+author:$id"
+        total_count=$(curl "${option[@]}" -s "$url" | jq -r '.total_count')
         for i in $(seq $(( (total_count+per_page-1)/per_page ))); do
-            curl "${option[@]}" -s "https://api.github.com/search/issues?q=type:pr+repo:$repo+author:$id&page=$i&per_page=$per_page" | jq -r '.items | .[] |  "1. [\(.title)](\(.html_url))"'
+            curl "${option[@]}" -s "$url&page=$i&per_page=$per_page" | jq -r '.items | .[] |  "1. [\(.title)](\(.html_url))"'
+        done
+    done
+
+    cat << EOF
+
+REVIEW
+===
+EOF
+    for repo in "${repos[@]}"; do
+        cat << EOF
+
+@$repo
+---
+EOF
+        url="https://api.github.com/search/issues?q=type:pr+repo:$repo+-author:$id+reviewed-by:$id" 
+        total_count=$(curl "${option[@]}" -s "$url" | jq -r '.total_count')
+        for i in $(seq $(( (total_count+per_page-1)/per_page ))); do
+            curl "${option[@]}" -s "$url&page=$i&per_page=$per_page" | jq -r '.items | .[] |  "1. [\(.title)](\(.html_url))"'
         done
     done
 }
