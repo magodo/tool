@@ -1,0 +1,75 @@
+#!/bin/bash
+
+#########################################################################
+# Author: Zhaoting Weng
+# Created Time: Thu 26 Dec 2019 01:01:39 PM CST
+# Description:
+#########################################################################
+
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
+usage() {
+    cat << EOF
+Usage: ./${MYNAME} [options] event start_date end_date
+
+Options:
+    -h|--help           show this message
+
+Arguments:
+    event               event name (e.g. "new_year")
+    start_data          start date (e.g. "2020-01-01")
+    end_data            start date (e.g. "2020-01-05")
+EOF
+}
+
+main() {
+    while :; do
+        case $1 in
+            -h|--help)
+                usage 
+                exit 1
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                break
+                ;;
+        esac
+        shift
+    done
+
+    local expect_n_arg
+    expect_n_arg=3
+    [[ $# = "$expect_n_arg" ]] || die "wrong arguments (expected: $expect_n_arg, got: $#)"
+    
+    event=$1
+    start_date=$2
+    end_date=$3
+
+    cat << EOF
+### out_of_office.tf ###
+
+resource "microsoft_empoyee_event" "$event" {
+    start_datetime            = "${start_date}T00:00:00+08:00"
+    end_datetime              = "${end_date}T23:59:59+08:00"
+}
+
+resource "microsoft_employee_status" "status" {
+    employee_name             = "Zhaoting Weng"
+    status                    = "Out of Office"
+    event_id                  = microsoft_empoyee_event.$event.id
+    email_correspondence {
+        checking_mail         = true
+        delayed_responses     = true
+    }
+    alternate_contacts        = ["nanxu@microsoft.com"]
+}
+EOF
+}
+
+main "$@"
